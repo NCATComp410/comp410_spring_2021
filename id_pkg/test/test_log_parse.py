@@ -67,7 +67,7 @@ class LogParseTest(unittest.TestCase):
         # expected, actual
         self.assertEqual(3, df.loc[114006, 'Severity'])
         self.assertEqual('Failed to get port statistics in 4GE SSM I/O card (error error_string).', df.loc[114006, 'Text'])
-        self.assertEqual('error error_string', df.loc[114006, 'Error'])
+        self.assertEqual('error_string', df.loc[114006, 'Error'])
 
 if __name__ == '__main__':
     unittest.main()
