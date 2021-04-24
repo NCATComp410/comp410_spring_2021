@@ -11,10 +11,6 @@ class TestSuspicious(unittest.TestCase):
 
     log = intrusion_detect.IdParse(syslog_file)
 
-    scan_msg = {'Date': 'Mar 24 2021 21:02:33',
-                'Host': 'HOST',
-                'ID': '%ASA-3-713162'}
-
     def test_get_low_severity(self):
         # Find low severity messages
         # low_sev = log.get_low_severity()
