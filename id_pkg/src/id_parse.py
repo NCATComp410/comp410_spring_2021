@@ -30,19 +30,58 @@ class IdParse(LogParse):
     def has_ACLDrop(self):
         return (self.df['ID'] == 710003).any()
 
+    def get_low_severity(self):
+        return self.df[self.df['Severity'] >= 6]
+
+    def get_high_severity(self):
+        return self.df[self.df['Severity'] < 5]
+
+    def get_suspicious(self):
+        # Find the attacks and attacking ip address
+        attacks = self.get_high_severity()
+        attack_ip_list = attacks['Source'].dropna().unique()
+
+        # find the successful connections
+        success = self.get_low_severity()
+
+        # suspicous is when an attacking ip address successfully connects
+        return success[success['Source'].isin(attack_ip_list)]
 
     def handle_asa_message(self, rec):
         """Implement ASA specific messages"""
+
+        # %ASA-4-419002: Received duplicate TCP SYN from in_interface:10.1.1.1/1234 to out_interface:10.11.11.1/8080
+        if rec['ID'] == 419002:
+            rec['Attack'] = True
+            m = re.search(r'Received duplicate TCP SYN from (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+) to (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
+            if m:
+                rec['Interface'] = m.group(1)
+                rec['Source'] = m.group(2)
+                rec['Source Port'] = m.group(3)
+                rec['Interface'] = m.group(4)
+                rec['Destination'] = m.group(5)
+                rec['Destination Port'] = m.group(6)
+
+            # %ASA-6-305011: Built dynamic TCP translation from VlanDMZ:10.239.198.144/1042 to Vlan10:172.161.54.237/8378
+            rec['Attack'] = False
+            m = re.search(r'Built dynamic TCP translation from VlanDMZ:(\d+\.\d+\.\d+\.\d+)/(\d+) to Vlan10:(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
+            if m:
+                rec['Source'] = m.group(1)
+                rec['Source Port'] = m.group(2)
+                rec['Destination'] = m.group(3)
+                rec['Destination Port'] = m.group(4)
+
         # %ASA-3-324301: Radius Accounting Request has a bad header length hdr_len, packet length pkt_len
-        if rec['ID'] == 324301:
+        elif rec['ID'] == 324301:
             m = re.search(r'Radius Accounting Request has a bad header length (\d+), packet length (\w+)', rec['Text'])
             if m:
                 rec['Header Length'] = m.group(1)
                 rec['Packet Length'] = m.group(2)
 
         # %ASA-2-106016: Deny IP spoof from (10.1.1.1) to 10.11.11.19 on interface TestInterface
-        if rec['ID'] == 106016:
-            m = re.search(r'Deny IP spoof from \((\d+\.\d+\.\d+\.\d+)\) to (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
+        elif rec['ID'] == 106016:
+            m = re.search(r'Deny IP spoof from \((\d+\.\d+\.\d+\.\d+)\) to (\d+\.\d+\.\d+\.\d+) on interface (\w+)',
+                          rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
                 rec['Destination'] = m.group(2)
@@ -50,7 +89,8 @@ class IdParse(LogParse):
 
         # %ASA-3-710003: {TCP|UDP} access denied by ACL from source_IP/source_port to interface_name:dest_IP/service
         elif rec['ID'] == 710003:
-            m = re.search(r'UDP access denied by ACL from (\d+\.\d+\.\d+\.\d+) port (\d+) to interface_name:(\w+)', rec['Text'])
+            m = re.search(r'UDP access denied by ACL from (\d+\.\d+\.\d+\.\d+) port (\d+) to interface_name:(\w+)',
+                          rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
                 rec['Port'] = m.group(2)
@@ -58,7 +98,8 @@ class IdParse(LogParse):
 
         elif rec['ID'] == 313008:
             # %ASA-3-313008: Denied ICMPv6 type=number , code=code from IP_address on interface interface_name
-            message = re.search(r'Denied ICMPv6 type=(\d+), code=(\d+) from (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
+            message = re.search(r'Denied ICMPv6 type=(\d+), code=(\d+) from (\d+\.\d+\.\d+\.\d+) on interface (\w+)',
+                                rec['Text'])
             if message:
                 rec['Number'] = message.group(1)
                 rec['Code'] = message.group(2)

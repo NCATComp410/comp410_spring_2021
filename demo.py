@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import id_pkg as intrusion_detect
 
-
+debug = False
 def show_aggie_pride():
     # https://pandas.pydata.org/docs/user_guide/index.html
     df = pd.DataFrame(['Aggie Pride', 'Worldwide', 'Aggies Do', 'Go Aggies', 'Aggies', 'GHOE!',
@@ -33,6 +33,7 @@ def pandas_demo():
     # Are there spoofing attacks in this log?
     if log.has_ip_spoofing():
         print('Spoofing attacks are present')
+
 
 
 if __name__ == "__main__":
