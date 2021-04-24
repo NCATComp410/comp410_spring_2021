@@ -30,6 +30,12 @@ class IdParse(LogParse):
     def has_ACLDrop(self):
         return (self.df['ID'] == 710003).any()
 
+    def get_low_severity(self):
+        return self.df[self.df['Severity'] >= 6]
+
+    def get_high_severity(self):
+        return self.df[self.df['Severity'] <= 5]
+
 
     def handle_asa_message(self, rec):
         """Implement ASA specific messages"""
@@ -71,6 +77,16 @@ class IdParse(LogParse):
             m = re.search(r'(\d+\.\d+\.\d+\.\d+) is attacking', rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
+
+        # %ASA-2-106001: Inbound TCP connection denied from 10.132.0.177/2257 to 172.16.10.177/80 flags SYN on interface inside TestInterface
+        elif rec['ID'] == 106001:
+            m = re.search(r'Inbound TCP connection denied from (\d+\.\d+\.\d+\.\d+)/(\d+) to (\d+\.\d+\.\d+\.\d+)/(\d+) flags SYN on interface inside (\w+)', rec['Text'])
+                if m:
+                    rec['Source'] = m.group(1)
+                    rec['Source Port'] = m.group(2)
+                    rec['Destination'] = m.group(3)
+                    rec['Destination Port'] = m.group(4)
+                    rec['Interface'] = m.group(5)
 
         return rec
 
