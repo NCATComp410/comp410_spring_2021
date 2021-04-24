@@ -80,6 +80,7 @@ class IdParse(LogParse):
 
         # %ASA-2-106001: Inbound TCP connection denied from 10.132.0.177/2257 to 172.16.10.177/80 flags SYN on interface inside TestInterface
         elif rec['ID'] == 106001:
+            rec['Attack'] = True
             m = re.search(r'Inbound TCP connection denied from (\d+\.\d+\.\d+\.\d+)/(\d+) to (\d+\.\d+\.\d+\.\d+)/(\d+) flags SYN on interface inside (\w+)', rec['Text'])
                 if m:
                     rec['Source'] = m.group(1)
