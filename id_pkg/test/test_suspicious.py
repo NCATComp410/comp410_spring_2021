@@ -3,6 +3,7 @@ import os
 import git
 import id_pkg as intrusion_detect
 
+
 class TestSuspicious(unittest.TestCase):
     git_root = os.path.join(git.Repo('.', search_parent_directories=True).working_tree_dir, 'id_pkg')
     syslog_file = os.path.join(git_root, 'data', 'intrusion_logs.txt')
@@ -33,8 +34,6 @@ class TestSuspicious(unittest.TestCase):
         print(suspicous['Source'])
 
         suspicous.to_excel('suspicious.xlsx')
-
-
 
 
 if __name__ == '__main__':

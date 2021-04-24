@@ -81,8 +81,7 @@ class IdParse(LogParse):
 
         # %ASA-2-106016: Deny IP spoof from (10.1.1.1) to 10.11.11.19 on interface TestInterface
         elif rec['ID'] == 106016:
-            m = re.search(r'Deny IP spoof from \((\d+\.\d+\.\d+\.\d+)\) to (\d+\.\d+\.\d+\.\d+) on interface (\w+)',
-                          rec['Text'])
+            m = re.search(r'Deny IP spoof from \((\d+\.\d+\.\d+\.\d+)\) to (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
                 rec['Destination'] = m.group(2)
@@ -113,6 +112,54 @@ class IdParse(LogParse):
             m = re.search(r'(\d+\.\d+\.\d+\.\d+) is attacking', rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
+
+        # %ASA-7-713160: Remote user (db248b6cbdc547bbc6c6fdfb6916eeb - 14) has been granted access by the Firewall Server
+        elif rec['ID'] == 713160:
+            rec['Attack'] = False
+            m = re.search(r'Remote user \((\w+)\s+\-+\s+(\d+)\) has been granted access by the Firewall Server', rec['Text'])
+            if m:
+                rec['Source'] = m.group(1)
+                rec['id'] = m.group(2)
+
+        # %ASA-3-713162: Remote user (db248b6cbdc547bbc6c6fdfb6916eeb - 1) has been rejected by the Firewall Server
+        elif rec['ID'] == 713162:
+            rec['Attack'] = True
+            m = re.search(r'Remote user \((\w+)\s+\-+\s+(\d+)\) has been rejected by the Firewall Server', rec['Text'])
+            if m:
+                rec['Source'] = m.group(1)
+                rec['id'] = m.group(2)
+
+        # %ASA-4-313004: Denied ICMP type=32, from 10.1.1.232 on interface interface_name to 172.18.1.232:no matching session
+        elif rec['ID'] == 313004:
+            rec['Attack'] = True
+            m = re.search(r'Denied ICMP type=(\d+), from (\d+\.\d+\.\d+\.\d+) on interface (\w+) to (\d+\.\d+\.\d+\.\d+):no matching session', rec['Text'])
+            if m:
+                rec['Type'] = m.group(1)
+                rec['Source'] = m.group(2)
+                rec['Interface'] = m.group(3)
+                rec['Destination'] = m.group(4)
+
+        # %ASA-4-419002: Received duplicate TCP SYN from in_interface:10.1.1.1/1234 to out_interface:10.11.11.1/8080
+        elif rec['ID'] == 419002:
+            rec['Attack'] = True
+            m = re.search(r'Received duplicate TCP SYN from (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+) to (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
+            if m:
+                rec['Interface'] = m.group(1)
+                rec['Source'] = m.group(2)
+                rec['Source Port'] = m.group(3)
+                rec['Interface'] = m.group(4)
+                rec['Destination'] = m.group(5)
+                rec['Destination Port'] = m.group(6)
+
+        # %ASA-6-305011: Built dynamic TCP translation from VlanDMZ:10.239.198.144/1042 to Vlan10:172.161.54.237/8378
+        elif rec['ID'] == 305011:
+            rec['Attack'] = False
+            m = re.search(r'Built dynamic TCP translation from VlanDMZ:(\d+\.\d+\.\d+\.\d+)/(\d+) to Vlan10:(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
+            if m:
+                rec['Source'] = m.group(1)
+                rec['Source Port'] = m.group(2)
+                rec['Destination'] = m.group(3)
+                rec['Destination Port'] = m.group(4)
 
         return rec
 
