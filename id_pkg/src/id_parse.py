@@ -93,9 +93,10 @@ class IdParse(LogParse):
         # Current average rate is 0 per second, max configured rate is 0; Cumulative total count is 2024
         elif rec['ID'] == 733101:
             rec['Attack'] = True
-            m = re.search(r'(\d+\.\d+\.\d+\.\d+) is attacking', rec['Text'])
+            m = re.search(r'(\d+\.\d+\.\d+\.\d+) is (\w+)', rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
+                rec['Attack Type'] = m.group(2)
 
         # %ASA-7-713160: Remote user (db248b6cbdc547bbc6c6fdfb6916eeb - 14) has been granted access by the Firewall Server
         elif rec['ID'] == 713160:
