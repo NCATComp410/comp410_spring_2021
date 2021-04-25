@@ -19,17 +19,14 @@ class TestSuspicious(unittest.TestCase):
         print(low_severity['ID'].unique())
 
         self.assertListEqual([305011, 713160], list(low_severity['ID'].unique()))
-
     def test_get_high_severity(self):
 
         attacks = self.log.get_high_severity()
-
         print(attacks['ID'].unique())
 
         self.assertListEqual([733100, 109017, 713162, 313004, 106016, 733101, 419002, 106001], list(attacks['ID'].unique()))
 
     def test_get_suspicous(self):
-
         suspicous = self.log.get_suspicious()
         print(suspicous['Source'])
 
