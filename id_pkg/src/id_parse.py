@@ -39,13 +39,14 @@ class IdParse(LogParse):
     def get_suspicious(self):
         attacks = self.get_high_severity()
         attack_ip_add_list = attacks['Source'].dropna().unique()
-        success = self.get_low_severity()
-        return success[success['Source'].isin(attack_ip_add_list)]
+        successful_connections = self.get_low_severity()
+        return successful_connections[successful_connections['Source'].isin(attack_ip_add_list)]
 
     def handle_asa_message(self, rec):
         """Implement ASA specific messages"""
         # %ASA-3-324301: Radius Accounting Request has a bad header length hdr_len, packet length pkt_len
         if rec['ID'] == 324301:
+            rec['Attack'] = True
             m = re.search(r'Radius Accounting Request has a bad header length (\d+), packet length (\w+)', rec['Text'])
             if m:
                 rec['Header Length'] = m.group(1)
@@ -53,14 +54,23 @@ class IdParse(LogParse):
 
         # %ASA-2-106016: Deny IP spoof from (10.1.1.1) to 10.11.11.19 on interface TestInterface
         elif rec['ID'] == 106016:
+            rec['Attack'] = True
             m = re.search(r'Deny IP spoof from \((\d+\.\d+\.\d+\.\d+)\) to (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
                 rec['Destination'] = m.group(2)
                 rec['Interface'] = m.group(3)
 
+        # %ASA-4-109017: User at 10.203.254.2 exceeded auth proxy connection limit (max)
+        elif rec['ID'] == 109017:
+            rec['Attack'] = True
+            m = re.search(r'User at (\d+\.\d+\.\d+\.\d+) exceeded auth proxy connection limit \(max\)', rec['Text'])
+            if m:
+                rec['Source'] = m.group(1)
+
         # %ASA-3-710003: {TCP|UDP} access denied by ACL from source_IP/source_port to interface_name:dest_IP/service
         elif rec['ID'] == 710003:
+            rec['Attack'] = True
             m = re.search(r'UDP access denied by ACL from (\d+\.\d+\.\d+\.\d+) port (\d+) to interface_name:(\w+)', rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
@@ -68,6 +78,7 @@ class IdParse(LogParse):
                 rec['Interface'] = m.group(3)
 
         elif rec['ID'] == 313008:
+            rec['Attack'] = True
             # %ASA-3-313008: Denied ICMPv6 type=number , code=code from IP_address on interface interface_name
             message = re.search(r'Denied ICMPv6 type=(\d+), code=(\d+) from (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
             if message:
@@ -79,6 +90,7 @@ class IdParse(LogParse):
         # %ASA-4-733101: Host 175.0.0.1 is attacking. Current burst rate is 200 per second, max configured rate is 0;
         # Current average rate is 0 per second, max configured rate is 0; Cumulative total count is 2024
         elif rec['ID'] == 733101:
+            rec['Attack'] = True
             m = re.search(r'(\d+\.\d+\.\d+\.\d+) is attacking', rec['Text'])
             if m:
                 rec['Source'] = m.group(1)
@@ -134,6 +146,17 @@ class IdParse(LogParse):
                 rec['Destination Interface'] = m.group(5)
                 rec['Destination'] = m.group(6)
                 rec['Destination Port'] = m.group(7)
+
+        # %ASA-2-106001: Inbound TCP connection denied from 10.132.0.2/2257 to 172.16.10.2/80 flags SYN on interface inside TestInterface
+        elif rec['ID'] == 106001:
+            rec['Attack'] = True
+            m = re.search(r'Inbound TCP connection denied from (\d+\.\d+\.\d+\.\d+)/(\d+) to (\d+\.\d+\.\d+\.\d+)/(\d+) flags SYN on interface inside (\w+)', rec['Text'])
+            if m:
+                rec['Source'] = m.group(1)
+                rec['Source Port'] = m.group(2)
+                rec['Destination'] = m.group(3)
+                rec['Destination Port'] = m.group(4)
+                rec['Interface'] = m.group(5)
 
         return rec
 
