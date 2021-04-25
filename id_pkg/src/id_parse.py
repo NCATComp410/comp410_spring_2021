@@ -59,8 +59,8 @@ class IdParse(LogParse):
             rec['Attack'] = True
             m = re.search(r'Deny IP spoof from \((\d+\.\d+\.\d+\.\d+)\) to (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
             if m:
-                # rec['Source'] = m.group(1)
-                rec['Source'] = m.group(2)
+                rec['Source'] = m.group(1)
+                rec['Destination'] = m.group(2)
                 rec['Interface'] = m.group(3)
 
         # %ASA-4-109017: User at 10.203.254.2 exceeded auth proxy connection limit (max)
