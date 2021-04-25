@@ -39,7 +39,9 @@ class IdParse(LogParse):
     def get_suspicious(self):
         attacks = self.get_high_severity()
         attack_ip_add_list = attacks['Source'].dropna().unique()
+        attacks.to_excel('attacks.xlsx')
         successful_connections = self.get_low_severity()
+        successful_connections.to_excel('connections.xlsx')
         return successful_connections[successful_connections['Source'].isin(attack_ip_add_list)]
 
     def handle_asa_message(self, rec):
@@ -57,8 +59,8 @@ class IdParse(LogParse):
             rec['Attack'] = True
             m = re.search(r'Deny IP spoof from \((\d+\.\d+\.\d+\.\d+)\) to (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
             if m:
-                rec['Source'] = m.group(1)
-                rec['Destination'] = m.group(2)
+                # rec['Source'] = m.group(1)
+                rec['Source'] = m.group(2)
                 rec['Interface'] = m.group(3)
 
         # %ASA-4-109017: User at 10.203.254.2 exceeded auth proxy connection limit (max)
@@ -103,7 +105,7 @@ class IdParse(LogParse):
                 rec['Source'] = m.group(1)
                 rec['id'] = m.group(2)
 
-        # %ASA-3-713162: Remote user (db248b6cbdc547bbc6c6fdfb6916eeb - 1) has been rejected by the Firewall Server
+        # %ASA-3-713162: Remote user (session Id - id ) has been rejected by the Firewall Server
         elif rec['ID'] == 713162:
             rec['Attack'] = True
             m = re.search(r'Remote user \((\w+)\s+\-+\s+(\d+)\) has been rejected by the Firewall Server', rec['Text'])
@@ -116,7 +118,7 @@ class IdParse(LogParse):
             rec['Attack'] = True
             m = re.search(r'Denied ICMP type=(\d+), from (\d+\.\d+\.\d+\.\d+) on interface (\w+) to (\d+\.\d+\.\d+\.\d+):no matching session', rec['Text'])
             if m:
-                rec['Type'] = m.group(1)
+                rec['type'] = m.group(1)
                 rec['Source'] = m.group(2)
                 rec['Interface'] = m.group(3)
                 rec['Destination'] = m.group(4)
@@ -133,15 +135,17 @@ class IdParse(LogParse):
                 rec['Destination'] = m.group(5)
                 rec['Destination Port'] = m.group(6)
 
-        # %ASA-6-305011: Built dynamic TCP translation from VlanDMZ:10.239.198.144/1042 to Vlan10:172.161.54.237/8378
+        # %ASA-6-305011: Built dynamic UDP translation from VlanDMZ:10.11.11.20/445 to Vlan30:172.18.10.1/445
         elif rec['ID'] == 305011:
             rec['Attack'] = False
-            m = re.search(r'Built dynamic TCP translation from VlanDMZ:(\d+\.\d+\.\d+\.\d+)/(\d+) to Vlan10:(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
+            m = re.search(r'Built dynamic (\w+) translation from VlanDMZ:(\d+\.\d+\.\d+\.\d+)/(\d+) to Vlan(\d+):(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
             if m:
-                rec['Source'] = m.group(1)
-                rec['Source Port'] = m.group(2)
-                rec['Destination'] = m.group(3)
-                rec['Destination Port'] = m.group(4)
+                rec['Protocol'] = m.group(1)
+                rec['Source'] = m.group(2)
+                rec['Source Port'] = m.group(3)
+                rec['Vlan'] = m.group(4)
+                rec['Destination'] = m.group(5)
+                rec['Destination Port'] = m.group(6)
 
         # %ASA-2-106001: Inbound TCP connection denied from 10.132.0.2/2257 to 172.16.10.2/80 flags SYN on interface inside TestInterface
         elif rec['ID'] == 106001:
