@@ -124,12 +124,16 @@ class IdParse(LogParse):
         # %ASA-6-305011: Built dynamic TCP translation from VlanDMZ:10.239.198.144/1042 to Vlan10:172.161.54.237/8378
         elif rec['ID'] == 305011:
             rec['Attack'] = False
-            m = re.search(r'Built dynamic TCP translation from VlanDMZ:(\d+\.\d+\.\d+\.\d+)/(\d+) to Vlan10:(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
+            m = re.search(r'Built dynamic (\w+) translation from (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+) ' +
+                          r'to (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+)', rec['Text'])
             if m:
-                rec['Source'] = m.group(1)
-                rec['Source Port'] = m.group(2)
-                rec['Destination'] = m.group(3)
-                rec['Destination Port'] = m.group(4)
+                rec['Protocol'] = m.group(1)
+                rec['Source Interface'] = m.group(2)
+                rec['Source'] = m.group(3)
+                rec['Source Port'] = m.group(4)
+                rec['Destination Interface'] = m.group(5)
+                rec['Destination'] = m.group(6)
+                rec['Destination Port'] = m.group(7)
 
         return rec
 
