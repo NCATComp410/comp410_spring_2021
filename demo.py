@@ -30,6 +30,21 @@ def pandas_demo():
     # what was done during sprint 3
     log = intrusion_detect.IdParse(log_file)
 
+    high_severity_attacks = log.get_high_severity()
+    low_severity_attacks = log.get_low_severity()
+
+    # prints unique IP addresses of high severity attacks
+    attacker_ip = high_severity_attacks['Source'].dropna().unique()
+
+    print('These are the unique high severity IP Addresses :')
+    print(attacker_ip)
+
+    # Get suspicious IP Address of attack ip that were successful in connecting
+    suspicious_IP = low_severity_attacks[low_severity_attacks['Source'].isin(attacker_ip)]
+
+    # Export the report as an excel file
+    suspicious_IP.to_excel('suspicious.xlsx')
+
     # Are there spoofing attacks in this log?
     if log.has_ip_spoofing():
         print('Spoofing attacks are present')
