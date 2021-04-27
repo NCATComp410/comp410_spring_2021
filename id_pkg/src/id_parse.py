@@ -146,13 +146,13 @@ class IdParse(LogParse):
         if rec['ID'] == 305011:
             rec['Attack'] = False
             m = re.search(
-                r'Built dynamic (\w+) translation from VlanDMZ:(\d+\.\d+\.\d+\.\d+)/(\d+) to Vlan(\d+):(\d+\.\d+\.\d+\.\d+)/(\d+)',
+                r'translation from (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+) to (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+)',
                 rec['Text'])
             if m:
-                rec['Protocol'] = m.group(1)
+                rec['Source Interface Name'] = m.group(1)
                 rec['Source'] = m.group(2)
                 rec['Source Port'] = m.group(3)
-                rec['Vlan'] = m.group(4)
+                rec['Destination Interface Name'] = m.group(4)
                 rec['Destination'] = m.group(5)
                 rec['Destination Port'] = m.group(6)
 
