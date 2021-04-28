@@ -144,10 +144,17 @@ class IdParse(LogParse):
 
         # %ASA-6-305011: Built {dynamic|static} {TCP|UDP|ICMP} translation from interface_name :real_address/real_port [(idfw_user )] to interface_name :mapped_address/mapped_port
         if rec['ID'] == 305011:
-            m = re.search(r' from interface_name \((\w+) to interface_name (\w+)\)', rec['Text'])
+            rec['Attack'] = False
+            m = re.search(
+                r'translation from (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+) to (\w+):(\d+\.\d+\.\d+\.\d+)/(\d+)',
+                rec['Text'])
             if m:
-                rec['Real Address'] = m.group(1)
-                rec['Mapped Address'] = m.group(2)
+                rec['Source Interface Name'] = m.group(1)
+                rec['Source'] = m.group(2)
+                rec['Source Port'] = m.group(3)
+                rec['Destination Interface Name'] = m.group(4)
+                rec['Destination'] = m.group(5)
+                rec['Destination Port'] = m.group(6)
 
         return rec
 
