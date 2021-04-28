@@ -65,6 +65,28 @@ class IdParse(LogParse):
                 rec['Source'] = m.group(1)
                 rec['id'] = m.group(2)
 
+        if rec['ID'] == 313008:
+            # %ASA-3-313008: Denied ICMPv6 type=number , code=code from IP_address on interface interface_name
+            message = re.search(
+                r'Denied ICMPv6 type=(\d+), code=(\d+) from (\d+\.\d+\.\d+\.\d+) on interface (\w+)', rec['Text'])
+            if message:
+                rec['Number'] = message.group(1)
+                rec['Code'] = message.group(2)
+                rec['Source'] = message.group(3)
+                rec['Interface'] = message.group(4)
+
+        if rec['ID'] == 733100:
+            m = re.search(r'rate-(\d+) exceeded. Current burst rate is (\d+) per second, max configured rate is ('
+                          r'\d+); Current average rate is (\d+) per second, max configured rate is (\d+); Cumulative '
+                          r'total count is (\d+)', rec['Text'])
+            if m:
+                rec['DropRate'] = m.group(1)
+                rec['BurstRate'] = m.group(2)
+                rec['MaxConfigRate1'] = m.group(3)
+                rec['CurrentAverageRate'] = m.group(4)
+                rec['MaxConfigRate2'] = m.group(5)
+                rec['TotalCount'] = m.group(6)
+
         return rec
 
     def handle_syslog_message(self, line):
